@@ -3,10 +3,10 @@
 # 基础包：接口测试的封装
 
 import requests
-import core.log as log
+from core.log import run_log as logger
 import json
 
-logging = log.get_logger()
+# logger = log.get_logger()
 
 def change_type(value):
     """
@@ -20,8 +20,8 @@ def change_type(value):
         if isinstance(eval(value), dict):
             result = eval(json.dumps(value))
             return result
-    except Exception, e:
-        logging.error("类型问题 %s", e)
+    except Exception as e:
+        logger.error("类型问题 %s", e)
 
 
 def api(method, url, data ,headers):
@@ -34,24 +34,20 @@ def api(method, url, data ,headers):
     :return: code码
     """
     global results
+
+
     try:
         if method == ("post" or "POST"):
             results = requests.post(url, data, headers=headers)
         if method == ("get" or "GET"):
             results = requests.get(url, data, headers=headers)
-      # if method == "put":
-      #     results = requests.put(url, data, headers=headers)
-      # if method == "delete":
-      #     results = requests.delete(url, headers=headers)
-      # if method == "patch":
-      #     results == requests.patch(url, data, headers=headers)
-      # if method == "options":
-      #     results == requests.options(url, headers=headers)
+
         response = results.json()
         code = response.get("code")
+
         return code
-    except Exception, e:
-        logging.error("service is error", e)
+    except Exception as e:
+        logger.error("service is error", e)
 
 
 def content(method, url, data, headers):
@@ -64,6 +60,8 @@ def content(method, url, data, headers):
     :return: message信息
     """
     global results
+
+
     try:
         if method == ("post" or "POST"):
             results = requests.post(url, data, headers=headers)
@@ -76,7 +74,8 @@ def content(method, url, data, headers):
         response = results.json()
         message = response.get("message")
         result = response.get("result")
+        #
         content = {"message": message, "result": result}
         return content
-    except Exception, e:
-        logging.error("请求失败 %s" % e)
+    except Exception as e:
+        logger.error("请求失败 %s" % e)

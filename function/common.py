@@ -4,13 +4,14 @@
 
 
 import core.mysql as mysql
-import core.log as log
+from core.log import run_log as logger
 import core.request as request
 import core.config as conf
 import constants as cs
 import os
+import function.globalvar as gl
 
-logging = log.get_logger()
+# logger = log.get_logger()
 
 
 class ApiTest:
@@ -32,7 +33,7 @@ class ApiTest:
         mysql.connect(host, user, password, db)
         res = mysql.execute(sql)
         mysql.close()
-        logging.info("Run sql: the row number affected is %s" % res)
+        logger.info("Run sql: the row number affected is %s" % res)
         return res
 
     def get_prepare_sql(self, filename, key):
@@ -46,8 +47,8 @@ class ApiTest:
             conf.get_config(filename)
             value = conf.get_data(title=cs.TITLE, key=key)
             return value
-        except Exception, e:
-            logging.error("获取用例参数值失败 %s" % e)
+        except Exception as e:
+            logger.error("获取用例参数值失败 %s" % e)
 
     def reset_report(self, filename):
         """
@@ -64,24 +65,28 @@ class ApiTest:
                 report_name = eval(conf.get_data(title=cs.REPORT_NAME, key=cs.R_NAME))
                 file = open(cs.YML_REPORT, 'r')
                 list_con = file.readlines()
-                content = str(list_con).decode("string_escape")
-                fileContent = "- [%s, %s]"
+                # content = str(list_con).decode("string_escape")
+                content = str(list_con)
+
+                fileContent = '- "%s": %s'
+                # fileContent = "- [%s, %s]"
                 row = "\n"
-                _content = fileContent % (reportName + cs.NOW, report_name)
+                # _content = fileContent % (reportName + cs.NOW, report_name)
+                _content = fileContent % (report_name, reportName + cs.NOW)
                 con = row + _content
 
                 if fileContent % (reportName + cs.NOW, report_name) not in content:
                     f = open(cs.YML_REPORT, 'a+')
                     f.write(con)
                 else:
-                    logging.info("内容已经存在 %s" % _content)
-        except Exception, e:
-            logging.error("文件路径不存在 %s", e)
+                    logger.info("内容已经存在 %s" % _content)
+        except Exception as e:
+            logger.error("文件路径不存在 %s", e)
 
     def write_report(self, content):
         """
         这个方法用于书写测试报告从而解决之前的通过
-        logging方式写入导致其他的日志无法实现写入
+        logger方式写入导致其他的日志无法实现写入
         :param content: 传入文件的内容
         :return: None
         """
@@ -91,8 +96,8 @@ class ApiTest:
         try:
             file = open(filename, 'a+')
             file.writelines(content)
-        except Exception, e:
-            logging.error("文件路径不存在 %s", e)
+        except Exception as e:
+            logger.error("文件路径不存在 %s", e)
 
     def execute_case(self, filename):
         """
@@ -100,6 +105,7 @@ class ApiTest:
         :param filename: 用例文件名称
         :return: 测试结果
         """
+
         conf.get_config(filename)
         list = eval(conf.get_title_list())
         try:
@@ -111,21 +117,36 @@ class ApiTest:
                 url = conf.get_data(title, key=cs.URL)
                 data = eval(conf.get_data(title, key=cs.DATA))
                 _data = request.json.dumps(data,ensure_ascii=False,indent=4)
+                conf.set_token(filename)
                 headers = eval(conf.get_data(title, key=cs.HEADERS))
                 _headers = request.json.dumps(headers,ensure_ascii=False,indent=4)
                 testUrl = cs.TEST_URL + url
-                actualCode = request.api(method, testUrl, _data, headers)
+                #actualCode = request.api(method, testUrl, _data, headers)
+                actualCode = request.api(method, testUrl, data, headers)
                 expectCode = conf.get_data(title, key=cs.CODE)
-
+                #cassie add
                 if actualCode != expectCode:
-                    logging.info("新增一条接口失败报告")
+                    logger.info("新增一条接口失败报告")
                     self.write_report(
                         cs.API_TEST_FAIL % (name, number, method, testUrl, _headers,_data, expectCode, actualCode))
                 else:
-                    logging.info("新增一条接口成功报告")
+                    logger.info("新增一条接口成功报告")
                     self.write_report(cs.API_TEST_SUCCESS % (name, number, method, testUrl, _headers,_data, expectCode, actualCode))
-        except Exception,e:
-            logging.error('执行case失败 %s',e)
+                    #获取token
+                    if 'login' in filename:
+                        response = request.results.json()
+                        token = response.get('result')["token"]
+                        #可以封装
+                        if token != None:
+                            fo = open("temp.py", "w")
+                            fo.write(token)
+                            fo.close()
+
+                        else:
+                            logger.info("未找到token")
+
+        except Exception as e:
+            logger.error('执行case失败 %s',e)
 
     def run_test(self, filename):
         """
@@ -141,8 +162,8 @@ class ApiTest:
                 self.execute_case(filename)
             else:
                 self.execute_case(filename)
-        except Exception, e:
-            logging.error("执行接口测试失败 %s", e)
+        except Exception as  e:
+            logger.error("执行接口测试失败 %s", e)
 
     def write_report_result(self):
         """
@@ -152,7 +173,7 @@ class ApiTest:
         reportName = eval(conf.get_data(title=cs.REPORT_NAME, key=cs.REPORT))
         _filename = cs.REPORT_PATH + reportName + cs.NOW
         try:
-            f = file(_filename)
+            f = open(_filename)
             content = f.read()
             if content != None:
                 _count = content.count("Number")
@@ -161,7 +182,7 @@ class ApiTest:
                 space = content.split('\n')
                 space.insert(0,cs.RESULT_CONTENT % (_count, _pass, _fail))
                 _content_ = '\n'.join(space)
-                fp = file(_filename,'r+')
+                fp = open(_filename,'r+')
                 fp.write(_content_)
-        except Exception, e:
-            logging.error("文件路径不存在 %s", e)
+        except Exception as e:
+            logger.error("文件路径不存在 %s", e)

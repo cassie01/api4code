@@ -5,10 +5,10 @@
 import sys
 import time
 import os
-reload(sys)
-sys.setdefaultencoding('utf8')
+# reload(sys)
+# sys.setdefaultencoding('utf8')
 
-TEST_URL = 'http://127.0.0.1:8080'
+TEST_URL = 'https://vmsul-service-test.tezign.com'
 OUT_PATH = os.path.dirname(os.path.dirname(__file__))
 
 REPORT_NAME = '测试报告'
@@ -23,6 +23,7 @@ CODE = 'code'
 HEADERS = 'headers'
 REPORT = 'report'
 R_NAME = 'reportName'
+
 
 REPORT_PATH = OUT_PATH + "/api4code/report/docs/"
 YML_REPORT = OUT_PATH + "/api4code/report/mkdocs.yml"
