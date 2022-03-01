@@ -11,6 +11,7 @@ import os
 TEST_URL = 'https://vmsul-service-test.tezign.com'
 OUT_PATH = os.path.dirname(os.path.dirname(__file__))
 
+
 REPORT_NAME = '测试报告'
 TITLE = '所有数据准备SQL'
 
@@ -24,14 +25,11 @@ HEADERS = 'headers'
 REPORT = 'report'
 R_NAME = 'reportName'
 
+REPORT_PATH = os.path.join(OUT_PATH,"api4code","report","docs/")
+YML_REPORT = os.path.join(OUT_PATH,"api4code","report","mkdocs.yml")
+CASE_PATH = os.path.join(OUT_PATH,"api4code","case/")
 
-REPORT_PATH = OUT_PATH + "/api4code/report/docs/"
-YML_REPORT = OUT_PATH + "/api4code/report/mkdocs.yml"
-
-
-CASE_PATH = OUT_PATH + "/api4code/case/"
-
-#测试报告内容
+# 测试报告内容
 API_TEST_FAIL = """
 ```
  %s Case Fail
@@ -62,7 +60,7 @@ API_TEST_SUCCESS = """
 ```
 """
 
-#报告结果统计
+# 报告结果统计
 RESULT_CONTENT = """
 测试结果如下：
 <table border="3" width="500px">

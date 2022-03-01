@@ -121,7 +121,6 @@ class ApiTest:
                 headers = eval(conf.get_data(title, key=cs.HEADERS))
                 _headers = request.json.dumps(headers,ensure_ascii=False,indent=4)
                 testUrl = cs.TEST_URL + url
-                #actualCode = request.api(method, testUrl, _data, headers)
                 actualCode = request.api(method, testUrl, data, headers)
                 expectCode = conf.get_data(title, key=cs.CODE)
                 #cassie add
@@ -133,10 +132,9 @@ class ApiTest:
                     logger.info("新增一条接口成功报告")
                     self.write_report(cs.API_TEST_SUCCESS % (name, number, method, testUrl, _headers,_data, expectCode, actualCode))
                     #获取token
-                    if 'login' in filename:
+                    if 'login.ini' in filename:
                         response = request.results.json()
                         token = response.get('result')["token"]
-                        #可以封装
                         if token != None:
                             fo = open("temp.py", "w")
                             fo.write(token)
@@ -186,3 +184,25 @@ class ApiTest:
                 fp.write(_content_)
         except Exception as e:
             logger.error("文件路径不存在 %s", e)
+
+    def get_file(self, path):
+        """
+        这个方法用于获取文件下的所有子文件
+        :return: 文件列表
+        """
+        # path = cs.CASE_PATH
+        filename = []
+        abs_path = []
+        for iroot, idirs, ifiles in os.walk(path):
+            for file in ifiles:
+                if 'ini' in file:
+                    filename.append(file)
+                    abs_path.append(os.path.join(iroot, file))
+        if 'login.ini' not in filename:
+            logger.error("测试用例文件路径下缺少登录用例")
+        # 确保登录case优先执行
+        for i in range(len(abs_path)):
+            if 'login.ini' in abs_path:
+                index_login = abs_path.index('login.ini')
+                abs_path[0], abs_path[index_login] = abs_path[index_login], abs_path[0]
+        return abs_path

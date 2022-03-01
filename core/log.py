@@ -83,6 +83,6 @@ def init_logger():
 # 实例化，默认调用
 logger = init_logger()
 
-if __name__ == "__main__":
-    run_log.info("测试日志模块")
+# if __name__ == "__main__":
+#     run_log.info("测试日志模块")
 

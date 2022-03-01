@@ -12,7 +12,8 @@ import function.globalvar as gl
 
 # config = configparser.ConfigParser()
 config = configparser.RawConfigParser()
-# logger = log.get_logger()
+# config = configparser.SafeConfigParser()
+
 
 
 def get_config(filename):
@@ -21,9 +22,11 @@ def get_config(filename):
     :param filename: 配置文件名
     :return: None
     """
-    global config
     try:
-        config.read(filename)
+        global config
+        config = configparser.RawConfigParser()
+        config.read(filename,encoding='utf-8-sig')
+
         return True
     except Exception as e:
         logger.error("读取配置失败 %s" % e)
@@ -49,6 +52,7 @@ def get_title_list():
     :return: title list
     """
     try:
+
         title = config.sections()
 
         # return str(title).decode("string_escape")
@@ -65,23 +69,25 @@ def set_token(filename):
     """
     if 'login.ini' not in filename:
         sections = eval(get_title_list())
+        for i in range(1,len(sections)):
+            if  'user_login' not in  sections[i] :
+                # 从temp文件读取token
+                fo = open("temp.py", "r+")
+                token = fo.read()
+                # 从ini文件中读取headers
+                # header = sections[1]
+                #优化
+                headers_json = config[sections[i]]['headers']
 
-        # 从temp文件读取token
-        fo = open("temp.py", "r+")
-        token = fo.read()
-        # 从ini文件中读取headers
-        # header = sections[1]
-        headers_json = config[sections[1]]['headers']
-
-        # str convert dict
-        headers_dict = eval(headers_json)
-        for k, v in headers_dict.items():
-            if k == 'x-token':
-                headers_dict['x-token'] = token
-        # dict convert str
-        headers_str = json.dumps(headers_dict)
-        # 设置headers值
-        config.set(sections[1], 'headers', headers_str)
-        # 写入ini文件
-        with open(filename, 'w') as configfile:
-            config.write(configfile)
+                # str convert dict
+                headers_dict = eval(headers_json)
+                for k, v in headers_dict.items():
+                    if k == 'x-token':
+                        headers_dict['x-token'] = token
+                # dict convert str
+                headers_str = json.dumps(headers_dict)
+                # 设置headers值
+                config.set(sections[i], 'headers', headers_str)
+                # 写入ini文件
+                with open(filename, 'w',encoding='utf-8-sig') as configfile:
+                    config.write(configfile)
